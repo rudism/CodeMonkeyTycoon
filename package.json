@@ -5,9 +5,11 @@
   "scripts": {
     "build": "tsc -p src/",
     "build:watch": "tsc -p src/ -w",
+    "build:sass": "node-sass src/ -o src",
+    "watch:sass": "npm run build:sass && node-sass src/ -wo src",
     "serve": "lite-server -c=bs-config.json",
     "prestart": "npm run build",
-    "start": "concurrently \"npm run build:watch\" \"npm run serve\""
+    "start": "concurrently \"npm run watch:sass\" \"npm run build:watch\" \"npm run serve\""
   },
   "keywords": [],
   "author": "Rudis Muiznieks",
@@ -21,22 +23,21 @@
     "@angular/platform-browser": "~4.0.0",
     "@angular/platform-browser-dynamic": "~4.0.0",
     "@angular/router": "~4.0.0",
-
     "systemjs": "0.19.40",
     "core-js": "^2.4.1",
     "rxjs": "5.0.1",
     "zone.js": "^0.8.4"
   },
   "devDependencies": {
+    "@types/node": "^6.0.46",
+    "canonical-path": "0.0.2",
     "concurrently": "^3.2.0",
     "lite-server": "^2.2.2",
-    "typescript": "~2.1.0",
-
-    "canonical-path": "0.0.2",
     "lodash": "^4.16.4",
+    "node-sass": "^4.5.1",
     "rimraf": "^2.5.4",
-
-    "@types/node": "^6.0.46"
+    "sass-loader": "^6.0.3",
+    "typescript": "~2.1.0"
   },
   "repository": {}
 }
