@@ -6,7 +6,8 @@ export class Resource {
   name: string;
   display?: string;
   displayWhole?: boolean;
-  pluralText?: string;
+  prefix?: string;
+  pluralText?: string[];
   craftText?: string;
   destroyText?: string;
   appearText?: string;
@@ -16,4 +17,5 @@ export class Resource {
   requirements?: ResourceMap;
   value?: ResourceMap;
   generators?: ResourceMap;
+  modifiers?: ResourceMap;
 }

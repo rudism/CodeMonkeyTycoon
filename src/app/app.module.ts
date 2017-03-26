@@ -9,6 +9,9 @@ import { ResourceDashboardComponent } from './resource-dashboard.component';
 import { GameEngineService } from './game-engine.service';
 import { LoggingService } from './logging.service';
 
+import { AmountPipe } from './amount.pipe';
+import { KeysPipe } from './keys.pipe';
+
 import { AppRoutingModule } from './app-routing.module';
 
 @NgModule({
@@ -20,7 +23,9 @@ import { AppRoutingModule } from './app-routing.module';
     AppComponent,
     ResourceComponent,
     ResourceGroupComponent,
-    ResourceDashboardComponent
+    ResourceDashboardComponent,
+    AmountPipe,
+    KeysPipe
   ],
   providers: [
     GameEngineService,

@@ -9,7 +9,7 @@ import { RESOURCEDEF, STARTINVENTORY } from './resource-definitions';
 @Injectable()
 export class GameEngineService {
   groups = RESOURCEDEF;
-  resources: { [name: string]: Resource } = {};
+  public resources: { [name: string]: Resource } = {};
   visible: { [name: string]: boolean } = {};
   processOrder: string[] = [];
   crafted: ResourceMap = {};
@@ -55,19 +55,37 @@ export class GameEngineService {
     }
 
     this.log.debug('Game engine initialized.');
+    this.log.append("You know HTML and CSS. Try writing some code!");
     this.performTick();
   }
 
   private performTick(): void {
-    // handle generators
+    // calculated generated amounts and total modifier effects
     var generated: ResourceMap = {};
+    var modified: ResourceMap = {};
     for(var name of this.processOrder){
-      if(!this.totals[name] || !this.resources[name].generators || this.totals[name] === 0) continue;
-      for(var key in this.resources[name].generators){
-        if(!generated[key]) generated[key] = 0;
-        generated[key] += this.totals[name] * this.resources[name].generators[key];
+      if(!this.totals[name] || (!this.resources[name].generators && !this.resources[name].modifiers) || this.totals[name] === 0) continue;
+      if(this.resources[name].generators){
+        for(var key in this.resources[name].generators){
+          if(!generated[key]) generated[key] = 0;
+          generated[key] += this.totals[name] * this.resources[name].generators[key];
+        }
+      }
+      if(this.resources[name].modifiers){
+        // only apply if the resource's negative generators are satisfied
+        if(!this.areGeneratorsSatisfied(this.resources[name])) continue;
+        for(var key in this.resources[name].modifiers){
+          if(!modified[key]) modified[key] = 0;
+          modified[key] += this.resources[name].modifiers[key];
+        }
       }
     }
+    // apply modifier effects to generated amounts
+    for(var key in modified){
+      if(!generated[key]) continue;
+      generated[key] += generated[key] * modified[key];
+    }
+    // add modified amounts to totals
     for(var key in generated) this.incCrafted(key, generated[key]);
 
     this.totals = this.getResourceTotals();
@@ -75,8 +93,6 @@ export class GameEngineService {
     // handle negative totals
     for(var name in this.totals){
       if(this.totals[name] >= 0) continue;
-
-      console.log('attritioning', name);
 
       // reduce all attritionable resources that depend on this one
       var deps: ResourceMap = {};
@@ -154,7 +170,7 @@ export class GameEngineService {
   craftResource(resource: Resource, amount: number = 1): void {
     if(!this.isResourceCraftable(resource, amount)) return;
     this.incCrafted(resource.name, amount);
-    this.log.append(`Added ${ amount } ${ resource.display } ${ resource.pluralText }.`);
+    this.log.append(`Added ${ amount } ${ resource.display }.`);
   }
 
   destroyResource(resource: Resource, amount: number = 1, quiet?: boolean): void {
@@ -165,12 +181,25 @@ export class GameEngineService {
       if(this.resources[key].restorable) continue;
       this.destroyResource(this.resources[key], resource.value[key] * amount * -1, true);
     }
-    if(!quiet) this.log.append(`Removed ${ amount } ${ resource.display } ${ resource.pluralText }.`);
+    if(!quiet) this.log.append(`Removed ${ amount } ${ resource.display }.`);
   }
 
   getResourceCount(resource: Resource): number {
     if(!this.totals[resource.name]) return 0;
     return this.totals[resource.name];
+  }
+
+  areGeneratorsSatisfied(resource: Resource): boolean {
+    if(!resource.generators) return true;
+    var satisfied = true;
+    for(var key in resource.generators){
+      if(resource.generators[key] > 0) continue;
+      if(!this.totals[key] || this.totals[key] <= 0){
+        satisfied = false;
+        break;
+      }
+    }
+    return satisfied;
   }
 
   isResourceCraftable(resource: Resource, amount: number = 1): boolean {

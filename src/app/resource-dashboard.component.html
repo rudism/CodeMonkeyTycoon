@@ -1,6 +1,8 @@
-<div *ngFor="let group of engine.getVisibleGroups()">
-  <resource-group [group]="group"></resource-group>
+<div class='container'>
+  <resource-group *ngFor="let group of engine.getVisibleGroups()" [group]="group"></resource-group>
 </div>
-<ul>
-  <li *ngFor="let line of log.lastLines(5)"><label>[{{line.date | date:'M/d HH:mm:ss'}}]</label> {{line.msg}}</li>
-</ul>
+<div class='log'>
+  <ul>
+    <li *ngFor="let line of log.lastLines(5)"><label>[{{line.date | date:'M/d HH:mm:ss'}}]</label> {{line.msg}}</li>
+  </ul>
+</div>

@@ -1,0 +1,65 @@
+@import '../_colors';
+
+.resource {
+  font-size: 0.8em;
+  margin: 4px 4px 0 0;
+  padding: 4px;
+  background-color: $color-primary-1;
+  border-radius: 3px;
+  width: 200px;
+  float: left;
+  position: relative;
+}
+
+h3 {
+  font-weight: bold;
+  color: $color-primary-0;
+  margin-bottom: 3px;
+}
+
+.amount {
+  color: $color-primary-4;
+  font-weight: bold;
+  font-size: 1.5em;
+}
+
+.controls {
+  min-height: 1em;
+  text-align: right;
+  margin-top: 5px;
+  position: relative;
+  button {
+    padding: 0;
+    font-size: 1em;
+  }
+}
+
+.toggle {
+  cursor: pointer;
+  font-size: 0.8em;
+  position: absolute;
+  left: 0;
+  bottom: 0;
+}
+
+.desc {
+  font-size: 0.8em;
+  color: $color-primary-3;
+  font-style: italic;
+  margin-top: 5px;
+}
+
+.cost {
+  font-size: 0.8em;
+  margin-top: 5px;
+  h4 {
+    font-weight: bold;
+    color: $color-primary-3;
+  }
+  ul {
+    margin-bottom: 10px;
+  }
+  .costamount {
+    color: $color-complement-3;
+  }
+}

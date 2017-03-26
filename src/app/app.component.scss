@@ -1,4 +1,11 @@
+@import '../_colors';
+
 h1 {
   font-weight: bold;
   font-size: 1.2em;
+  color: $color-primary-1;
+}
+
+.container {
+  margin: 10px 15px;
 }
