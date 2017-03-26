@@ -1,6 +1,6 @@
 import { Component } from '@angular/core';
 
-import { ResourceManagementService } from './resource-management.service';
+import { GameEngineService } from './game-engine.service';
 
 @Component({
   selector: 'resource-dashboard',
@@ -12,5 +12,5 @@ import { ResourceManagementService } from './resource-management.service';
 })
 
 export class ResourceDashboardComponent {
-  constructor(public engine: ResourceManagementService) {}
+  constructor(public engine: GameEngineService) {}
 }

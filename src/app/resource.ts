@@ -10,13 +10,9 @@ export class Resource {
   destroyText?: string;
   appearText?: string;
   descText?: string;
-
-  // when will the resource become available for purchase?
+  restorable?: boolean;
+  attritionable?: boolean;
   requirements?: ResourceMap;
-
-  // how much does this directly add to other resources
   value?: ResourceMap;
-
-  // automatically generated resources by this resource
   generators?: ResourceMap;
 }

@@ -1,7 +1,7 @@
 import { Component, Input } from '@angular/core';
 
 import { ResourceGroup } from './resource-group';
-import { ResourceManagementService } from './resource-management.service';
+import { GameEngineService } from './game-engine.service';
 
 @Component({
   selector: 'resource-group',
@@ -18,5 +18,5 @@ import { ResourceManagementService } from './resource-management.service';
 export class ResourceGroupComponent {
   @Input() group: ResourceGroup;
 
-  constructor(public engine: ResourceManagementService) {}
+  constructor(public engine: GameEngineService) {}
 }

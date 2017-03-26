@@ -5,7 +5,7 @@ import { ResourceGroup } from './resource-group';
 import { RESOURCEDEF, STARTINVENTORY } from './resource-definitions';
 
 @Injectable()
-export class ResourceManagementService {
+export class GameEngineService {
   groups = RESOURCEDEF;
   resources: { [name: string]: Resource } = {};
   processOrder: string[] = [];
@@ -14,7 +14,6 @@ export class ResourceManagementService {
   globals: ResourceMap = {};
 
   constructor() {
-    console.log('engine initializing');
     var unresolved: { [name: string]: string[] } = {};
     for(var group of this.groups){
       for(var resource of group.resources){
@@ -67,7 +66,33 @@ export class ResourceManagementService {
     for(var key in generated) this.incCrafted(key, generated[key]);
 
     this.totals = this.getResourceTotals();
-    console.log('tick');
+
+    // handle negative totals
+    for(var name in this.totals){
+      if(this.totals[name] >= 0) continue;
+
+      console.log('attritioning', name);
+
+      // reduce all attritionable resources that depend on this one
+      var deps: ResourceMap = {};
+      var totalDeps = 0;
+      for(var key in this.resources){
+        if(name === key) continue;
+        if(!this.resources[key].attritionable) continue;
+        if(this.crafted[key] <= 0) continue;
+        if(!this.resources[key].value) continue;
+        if(!this.resources[key].value[name] || this.resources[key].value[name] > 0) continue;
+        deps[key] = this.resources[key].value[name] * this.totals[key];
+        totalDeps += deps[key];
+      }
+      // total reduction will be 1/2 of discrepancy
+      var totalReduction = this.totals[name] * -0.5;
+      for(var key in deps){
+        this.crafted[key] -= totalReduction * (deps[key] / totalDeps);
+        if(this.crafted[key] < 0.01) this.crafted[key] = 0;
+      }
+    }
+
     setTimeout(() => this.performTick(), 100);
   }
 
@@ -104,14 +129,19 @@ export class ResourceManagementService {
     if(amount > 0) this.globals[name] += amount;
   }
 
-  craftResource(resource: Resource): void {
-    if(!this.isResourceCraftable(resource)) return;
-    this.incCrafted(resource.name);
+  craftResource(resource: Resource, amount: number = 1): void {
+    if(!this.isResourceCraftable(resource, amount)) return;
+    this.incCrafted(resource.name, amount);
   }
 
-  destroyResource(resource: Resource): void {
+  destroyResource(resource: Resource, amount: number = 1): void {
     if(!this.crafted[resource.name]) return;
-    this.incCrafted(resource.name, -1);
+    this.incCrafted(resource.name, amount * -1);
+    if(!resource.value) return;
+    for(var key in resource.value){
+      if(this.resources[key].restorable) continue;
+      this.destroyResource(this.resources[key], resource.value[key] * amount * -1);
+    }
   }
 
   getResourceCount(resource: Resource): number {
@@ -119,21 +149,15 @@ export class ResourceManagementService {
     return this.totals[resource.name];
   }
 
-  isResourceCraftable(resource: Resource): boolean {
+  isResourceCraftable(resource: Resource, amount: number = 1): boolean {
     if(!resource.craftText) return false;
     var craftable = true;
     for(var key in resource.value){
       if(resource.value[key] > 0) continue;
       if(!this.totals[key]){ craftable = false; break; }
-      if(this.totals[key] < resource.value[key] * -1){ craftable = false; break; }
+      if(this.totals[key] < resource.value[key] * amount * -1){ craftable = false; break; }
     }
     return craftable;
-  }
-
-  resourceHasVolume(resource: Resource): boolean {
-    if(!this.totals[resource.name]) return false;
-    if(this.totals[resource.name] <= 0) return false;
-    return true;
   }
 
   getVisibleResources(group: ResourceGroup): Resource[] {

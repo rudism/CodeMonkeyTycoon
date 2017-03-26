@@ -3,8 +3,7 @@ import { ResourceGroup } from './resource-group';
 
 export const STARTINVENTORY: ResourceMap = {
   'money': 100,
-  'storage': 50,
-  'bandwidth': 1000
+  'storage': 50
 };
 
 var general: ResourceGroup = { name: 'General', resources: [
@@ -18,13 +17,15 @@ var general: ResourceGroup = { name: 'General', resources: [
     name: 'storage',
     display: 'Storage Space',
     pluralText: 'GB',
-    descText: "It's not the size that matters. Actully, yes it is."
+    descText: "It's not the size that matters. Actully, yes it is.",
+    restorable: true
   },
   {
     name: 'bandwidth',
     display: 'Bandwidth',
     pluralText: 'GB',
-    descText: "Data caps are horse poop!"
+    descText: "Data caps are horse poop!",
+    restorable: true
   }
 ]};
 
@@ -36,7 +37,8 @@ var clients: ResourceGroup = { name: 'Clients', resources: [
     requirements: { 'basic-website': 1 },
     appearText: "Some users are reading your website!",
     value: { 'bandwidth': -0.1 },
-    descText: "These guys just use up bandwidth."
+    descText: "These guys just use up bandwidth.",
+    attritionable: true
   },
   {
     name: 'ad-users',
@@ -46,7 +48,8 @@ var clients: ResourceGroup = { name: 'Clients', resources: [
     appearText: "Some people are actually paying to use that app!",
     value: { 'bandwidth': -0.1 },
     generators: { 'money': 0.001 },
-    descText: "They use up bandwidth, but generate a small amount of income."
+    descText: "They use up bandwidth, but generate a small amount of income.",
+    attritionable: true
   }
 ]};
 
@@ -103,7 +106,8 @@ var infrastructure: ResourceGroup = { name: 'Infrastructure', resources: [
     destroyText: 'Tear Down',
     requirements: { 'basic-website': 2 },
     value: { 'storage': -1 },
-    descText: "A free but not very scalable database instance."
+    descText: "A free but not very scalable database instance.",
+    restorable: true
   }
 ]};
 
@@ -121,7 +125,8 @@ var products: ResourceGroup = { name: 'Products', resources: [
     value: {
       'html': -5,
       'javascript': -10,
-      'storage': -0.1
+      'storage': -0.1,
+      'bandwidth': 5
     },
     generators: { 'basic-users': 0.01 },
     descText: "Mostly pictures of cats."
@@ -145,7 +150,8 @@ var products: ResourceGroup = { name: 'Products', resources: [
       'html': -10,
       'javascript': -20,
       'mysql-db': -1,
-      'storage': -1
+      'storage': -1,
+      'bandwidth': 10
     },
     generators: {
       'basic-users': 0.05,
