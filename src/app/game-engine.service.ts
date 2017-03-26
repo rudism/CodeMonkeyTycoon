@@ -1,5 +1,7 @@
 import { Injectable } from '@angular/core';
 
+import { LoggingService } from './logging.service';
+
 import { Resource, ResourceMap } from './resource';
 import { ResourceGroup } from './resource-group';
 import { RESOURCEDEF, STARTINVENTORY } from './resource-definitions';
@@ -8,12 +10,14 @@ import { RESOURCEDEF, STARTINVENTORY } from './resource-definitions';
 export class GameEngineService {
   groups = RESOURCEDEF;
   resources: { [name: string]: Resource } = {};
+  visible: { [name: string]: boolean } = {};
   processOrder: string[] = [];
   crafted: ResourceMap = {};
   totals: ResourceMap = {};
   globals: ResourceMap = {};
 
-  constructor() {
+  constructor(public log: LoggingService) {
+    this.log.debug('Game engine initializing.');
     var unresolved: { [name: string]: string[] } = {};
     for(var group of this.groups){
       for(var resource of group.resources){
@@ -50,6 +54,7 @@ export class GameEngineService {
       this.incCrafted(name, STARTINVENTORY[name]);
     }
 
+    this.log.debug('Game engine initialized.');
     this.performTick();
   }
 
@@ -111,6 +116,7 @@ export class GameEngineService {
   }
 
   private isResourceVisible(resource: Resource): boolean {
+    if(this.visible[resource.name]) return this.visible[resource.name];
     if(!resource.display) return false;
     if(!resource.requirements) return true;
     var visible = true;
@@ -118,10 +124,26 @@ export class GameEngineService {
       if(!this.globals[key]){ visible = false; break; }
       if(this.globals[key] < resource.requirements[key]){ visible = false; break; }
     }
+    if(visible){
+      this.visible[resource.name] = true;
+      if(resource.appearText) this.log.append(resource.appearText);
+    }
     return visible;
   }
 
   private incCrafted(name: string, amount: number = 1): void {
+    // bail if it can't be afforded
+    if(this.resources[name].value){
+      for(var key in this.resources[name].value){
+        if(this.resources[name].value[key] < 0){
+          var maxAmount = this.totals[key]
+            ? this.totals[key] / this.resources[name].value[key] * -1
+            : 0;
+          if(maxAmount < amount) return;
+        }
+      }
+    }
+
     if(!this.crafted[name]) this.crafted[name] = 0;
     if(!this.globals[name]) this.globals[name] = 0;
     this.crafted[name] += amount;
@@ -132,16 +154,18 @@ export class GameEngineService {
   craftResource(resource: Resource, amount: number = 1): void {
     if(!this.isResourceCraftable(resource, amount)) return;
     this.incCrafted(resource.name, amount);
+    this.log.append(`Added ${ amount } ${ resource.display } ${ resource.pluralText }.`);
   }
 
-  destroyResource(resource: Resource, amount: number = 1): void {
+  destroyResource(resource: Resource, amount: number = 1, quiet?: boolean): void {
     if(!this.crafted[resource.name]) return;
     this.incCrafted(resource.name, amount * -1);
     if(!resource.value) return;
     for(var key in resource.value){
       if(this.resources[key].restorable) continue;
-      this.destroyResource(this.resources[key], resource.value[key] * amount * -1);
+      this.destroyResource(this.resources[key], resource.value[key] * amount * -1, true);
     }
+    if(!quiet) this.log.append(`Removed ${ amount } ${ resource.display } ${ resource.pluralText }.`);
   }
 
   getResourceCount(resource: Resource): number {

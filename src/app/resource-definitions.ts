@@ -21,10 +21,7 @@ var general: ResourceGroup = { name: 'General', resources: [
     restorable: true
   },
   {
-    name: 'bandwidth',
-    display: 'Bandwidth',
-    pluralText: 'GB',
-    descText: "Data caps are horse poop!",
+    name: 'capacity',
     restorable: true
   }
 ]};
@@ -36,7 +33,7 @@ var clients: ResourceGroup = { name: 'Clients', resources: [
     pluralText: 'users',
     requirements: { 'basic-website': 1 },
     appearText: "Some users are reading your website!",
-    value: { 'bandwidth': -0.1 },
+    value: { 'capacity': -1 },
     descText: "These guys just use up bandwidth.",
     attritionable: true
   },
@@ -46,7 +43,7 @@ var clients: ResourceGroup = { name: 'Clients', resources: [
     pluralText: 'users',
     requirements: { 'basic-webapp': 1 },
     appearText: "Some people are actually paying to use that app!",
-    value: { 'bandwidth': -0.1 },
+    value: { 'capacity': -1 },
     generators: { 'money': 0.001 },
     descText: "They use up bandwidth, but generate a small amount of income.",
     attritionable: true
@@ -126,7 +123,7 @@ var products: ResourceGroup = { name: 'Products', resources: [
       'html': -5,
       'javascript': -10,
       'storage': -0.1,
-      'bandwidth': 5
+      'capacity': 10
     },
     generators: { 'basic-users': 0.01 },
     descText: "Mostly pictures of cats."
@@ -151,7 +148,7 @@ var products: ResourceGroup = { name: 'Products', resources: [
       'javascript': -20,
       'mysql-db': -1,
       'storage': -1,
-      'bandwidth': 10
+      'capacity': 100
     },
     generators: {
       'basic-users': 0.05,

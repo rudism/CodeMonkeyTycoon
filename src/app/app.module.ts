@@ -7,6 +7,7 @@ import { ResourceGroupComponent } from './resource-group.component';
 import { ResourceDashboardComponent } from './resource-dashboard.component';
 
 import { GameEngineService } from './game-engine.service';
+import { LoggingService } from './logging.service';
 
 import { AppRoutingModule } from './app-routing.module';
 
@@ -22,7 +23,8 @@ import { AppRoutingModule } from './app-routing.module';
     ResourceDashboardComponent
   ],
   providers: [
-    GameEngineService
+    GameEngineService,
+    LoggingService
   ],
   bootstrap: [ AppComponent ]
 })
