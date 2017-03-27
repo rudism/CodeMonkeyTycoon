@@ -4,19 +4,14 @@
   margin-top: 20px;
   overflow: auto;
 }
+
 .log {
-  padding: 5px;
-  font-family: monospace;
-  font-size: 1.2em;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: elipsis;
-  margin-top: 10px;
-  height: 6em;
-  line-height: 1.2em;
-  background-color: $color-primary-1;
-  border-radius: 5px;
-  label {
-    color: $color-primary-0;
+  ul {
+    height: 6em;
+  }
+  li {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
 }

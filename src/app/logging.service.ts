@@ -1,21 +1,27 @@
 import { Injectable, isDevMode } from '@angular/core';
+import { PushNotificationsService } from 'angular2-notifications';
 
 @Injectable()
 export class LoggingService {
-  public lines: { date: Date, msg: string }[] = [];
+  public lines: { date: Date, msg: string, important: boolean }[] = [];
 
-  append(msg: string): void {
+  constructor(private pushNotifications: PushNotificationsService) {}
+
+  append(msg: string, important?: boolean): void {
     this.lines.push({
       date: new Date(),
-      msg: msg
+      msg: msg,
+      important: important
     });
+    if(important) this.notify(msg);
   }
 
   debug(msg: string): void {
     console.log(msg);
     if(isDevMode()) this.lines.push({
       date: new Date(),
-      msg: msg
+      msg: msg,
+      important: false
     });
   }
 
@@ -26,7 +32,13 @@ export class LoggingService {
     return this.lines.slice(start, end);
   }
 
-  clear(): void {
+  clear(): boolean {
     this.lines = [];
+    return false;
+  }
+
+  notify(msg: string): void {
+    var options = { body: msg };
+    this.pushNotifications.create('Code Monkey Tycoon', options).subscribe();
   }
 }

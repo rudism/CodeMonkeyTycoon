@@ -1,0 +1,31 @@
+@import '../_colors';
+
+.log {
+  padding: 5px;
+  margin-top: 10px;
+  background-color: $color-primary-1;
+  border-radius: 5px;
+  ul {
+    font-family: monospace;
+    line-height: 1.2em;
+    margin-bottom: 5px;
+  }
+  label {
+    color: $color-primary-0;
+  }
+  .important {
+    color: $color-complement-3;
+    font-weight: bold;
+  }
+}
+.control {
+  font-size: 0.8em;
+  text-align: right;
+  a {
+    color: $color-primary-3;
+    text-decoration: none;
+    &:hover {
+      text-decoration: underline;
+    }
+  }
+}

@@ -1,0 +1,12 @@
+<div class='log'>
+  <div class='control'>
+    <a href='#' (click)="log.clear()">Clear</a> |
+    <a routerLink="/dashboard">Return to Game</a>
+  </div>
+  <ul>
+    <li *ngFor="let line of log.lines">
+      <label>[{{line.date | date:'M/d HH:mm:ss'}}]</label>
+      <span [class.important]="line.important">{{line.msg}}</span>
+    </li>
+  </ul>
+</div>

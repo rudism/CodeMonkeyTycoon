@@ -12,6 +12,7 @@ import { AmountPipe } from './amount.pipe';
 
 export class ResourceComponent {
   @Input() resource: Resource;
+  @Input() skipFlash: boolean;
   expanded: boolean = false;
   savedCost: boolean = null;
   private costs: { name: string, amount: string }[] = null;
@@ -31,7 +32,7 @@ export class ResourceComponent {
     }
 
     for(var key in this.resource.value){
-      if(this.resource.value[key] < 0){
+      if(this.engine.resources[key].display && this.resource.value[key] < 0){
         this.savedCost = true;
         return true;
       }

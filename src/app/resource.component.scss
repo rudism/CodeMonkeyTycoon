@@ -3,12 +3,17 @@
 .resource {
   font-size: 0.8em;
   margin: 4px 4px 0 0;
-  padding: 4px;
+  padding: 2px;
   background-color: $color-primary-1;
   border-radius: 3px;
   width: 200px;
   float: left;
   position: relative;
+  border: 2px solid $color-primary-1;
+  transition : border 10000ms ease-out;
+  &.new {
+    border: 2px solid $color-complement-0;
+  }
 }
 
 h3 {

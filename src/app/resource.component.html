@@ -1,4 +1,4 @@
-<div class='resource'>
+<div class='resource' flash-new [skipFlash]="skipFlash">
   <h3 class='name'>{{resource.display}}</h3>
   <span class='amount'>{{resource.prefix}}{{engine.getResourceCount(resource) | amount:resource.pluralText}}</span> <label class='unit'>{{engine.getResourceCount(resource) | amount:resource.pluralText:true}}</label>
   <div class='expanded' *ngIf="expanded">

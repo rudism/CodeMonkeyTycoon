@@ -6,6 +6,11 @@
   padding: 4px;
   border-radius: 5px;
   overflow: auto;
+  border: 2px solid $color-primary-4;
+  transition : border 10000ms ease-out;
+  &.new {
+    border: 2px solid $color-complement-3;
+  }
 }
 
 h2 {

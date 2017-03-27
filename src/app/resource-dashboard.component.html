@@ -1,8 +1,16 @@
 <div class='container'>
-  <resource-group *ngFor="let group of engine.getVisibleGroups()" [group]="group"></resource-group>
+  <resource-group *ngFor="let group of engine.getVisibleGroups()" [group]="group" [skipFlash]="skipFlash"></resource-group>
 </div>
 <div class='log'>
   <ul>
-    <li *ngFor="let line of log.lastLines(5)"><label>[{{line.date | date:'M/d HH:mm:ss'}}]</label> {{line.msg}}</li>
+    <li *ngFor="let line of log.lastLines(5)" [title]="line.msg">
+      <label>[{{line.date | date:'M/d HH:mm:ss'}}]</label>
+      <span [class.important]="line.important">{{line.msg}}</span>
+    </li>
   </ul>
+  <div class='control'>
+    <a href='#' (click)="log.clear()">Clear</a> |
+    <a routerLink="/history">See Full Log</a>
+  </div>
 </div>
+

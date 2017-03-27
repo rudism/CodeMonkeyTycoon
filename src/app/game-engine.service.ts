@@ -55,7 +55,7 @@ export class GameEngineService {
     }
 
     this.log.debug('Game engine initialized.');
-    this.log.append("You know HTML and CSS. Try writing some code!");
+    this.log.append("You know HTML and CSS. Try writing some code!", true);
     this.performTick();
   }
 
@@ -142,7 +142,7 @@ export class GameEngineService {
     }
     if(visible){
       this.visible[resource.name] = true;
-      if(resource.appearText) this.log.append(resource.appearText);
+      if(resource.appearText) this.log.append(resource.appearText, true);
     }
     return visible;
   }
