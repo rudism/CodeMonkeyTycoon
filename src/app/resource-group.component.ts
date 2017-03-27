@@ -9,7 +9,7 @@ import { GameEngineService } from './game-engine.service';
   styleUrls: ['./resource-group.component.css']
 })
 
-export class ResourceGroupComponent implements AfterViewInit {
+export class ResourceGroupComponent {
   @Input() group: ResourceGroup;
   @Input() skipFlash: boolean;
 

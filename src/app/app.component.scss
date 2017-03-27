@@ -8,4 +8,13 @@ h1 {
 
 .container {
   margin: 10px 15px;
+  position: relative;
+}
+
+.reset {
+  font-size: 0.8em;
+  padding: 0;
+  position: absolute;
+  top: 0;
+  right: 0;
 }

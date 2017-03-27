@@ -15,9 +15,23 @@ export class GameEngineService {
   crafted: ResourceMap = {};
   totals: ResourceMap = {};
   globals: ResourceMap = {};
+  private resetting: boolean = false;
 
   constructor(public log: LoggingService) {
+    this.init();
+  }
+
+  private init(){
     this.log.debug('Game engine initializing.');
+
+    this.resources = {};
+    this.visible = {};
+    this.processOrder = [];
+    this.crafted = {};
+    this.totals = {};
+    this.globals = {};
+    this.resetting = false;
+
     var unresolved: { [name: string]: string[] } = {};
     for(var group of this.groups){
       for(var resource of group.resources){
@@ -55,11 +69,17 @@ export class GameEngineService {
     }
 
     this.log.debug('Game engine initialized.');
-    this.log.append("You know HTML and CSS. Try writing some code!", true);
+    this.log.append("You know HTML and Javascript. Try writing some code!", true);
     this.performTick();
   }
 
   private performTick(): void {
+    if(this.resetting){
+      this.log.append("Time for a pivot!", true);
+      this.init();
+      return;
+    }
+
     // calculated generated amounts and total modifier effects
     var generated: ResourceMap = {};
     var modified: ResourceMap = {};
@@ -235,5 +255,9 @@ export class GameEngineService {
       if(isVisible) visible.push(group);
     }
     return visible;
+  }
+
+  reset(): void {
+    this.resetting = true;
   }
 }
