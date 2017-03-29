@@ -5,7 +5,6 @@ export interface ResourceMap {
 export class Resource {
   name: string;
   display?: string;
-  displayWhole?: boolean;
   prefix?: string;
   pluralText?: string[];
   craftText?: string;

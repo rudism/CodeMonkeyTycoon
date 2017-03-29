@@ -13,15 +13,16 @@ import { LoggingService } from './logging.service';
 import { AmountPipe } from './amount.pipe';
 import { KeysPipe } from './keys.pipe';
 
-import { AppRoutingModule } from './app-routing.module';
 import { PushNotificationsModule } from 'angular2-notifications';
+
+import { AppRoutingModule } from './app-routing.module';
 import { NewElementDirective } from './new-element.directive';
 
 @NgModule({
   imports: [
     BrowserModule,
-    AppRoutingModule,
-    PushNotificationsModule
+    PushNotificationsModule,
+    AppRoutingModule
   ],
   declarations: [
     AppComponent,

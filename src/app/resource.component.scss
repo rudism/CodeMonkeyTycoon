@@ -14,12 +14,14 @@
   &.new {
     border: 2px solid $color-complement-0;
   }
+  position: relative;
 }
 
 h3 {
   font-weight: bold;
   color: $color-primary-0;
   margin-bottom: 3px;
+  cursor: pointer;
 }
 
 .amount {
@@ -62,9 +64,50 @@ h3 {
     color: $color-primary-3;
   }
   ul {
-    margin-bottom: 10px;
+    float: left;
+  }
+  .costcontainer {
+    overflow: auto;
+    padding: 2px 0;
+  }
+  .label {
+    text-align: right;
+    margin-right: 3px;
   }
   .costamount {
     color: $color-complement-3;
+    &::before {
+      content: '✕';
+    }
+    &.met {
+      color: $color-primary-3;
+      &::before {
+        content: '✓';
+      }
+    }
+  }
+}
+
+.delta {
+  position: absolute;
+  top: 0;
+  right: 0;
+  font-size: 0.8em;
+  color: $color-primary-3;
+  &::before {
+    content: '↑';
+    margin-left: 0;
+    margin-right: 0;
+  }
+  &.max {
+    color: $color-complement-3;
+  }
+  &.neg {
+    color: $color-complement-3;
+    &::before {
+      content: '↓';
+      margin-left: 0;
+      margin-right: 0;
+    }
   }
 }

@@ -4,50 +4,32 @@ import { LoggingService } from './logging.service';
 
 import { Resource, ResourceMap } from './resource';
 import { ResourceGroup } from './resource-group';
+import { ResourceMeta } from './resource-meta';
 import { RESOURCEDEF, STARTINVENTORY } from './resource-definitions';
 
 @Injectable()
 export class GameEngineService {
   groups = RESOURCEDEF;
-  public resources: { [name: string]: Resource } = {};
-  visible: { [name: string]: boolean } = {};
-  processOrder: string[] = [];
-  crafted: ResourceMap = {};
-  totals: ResourceMap = {};
-  globals: ResourceMap = {};
+  public resource: { [name: string]: ResourceMeta } = {};
+  valueOrder: string[] = [];
+  reverseValueOrder: string[] = [];
+  generatorOrder: string[] = [];
   private resetting: boolean = false;
 
   constructor(public log: LoggingService) {
     this.init();
   }
 
-  private init(){
-    this.log.debug('Game engine initializing.');
-
-    this.resources = {};
-    this.visible = {};
-    this.processOrder = [];
-    this.crafted = {};
-    this.totals = {};
-    this.globals = {};
-    this.resetting = false;
-
-    var unresolved: { [name: string]: string[] } = {};
-    for(var group of this.groups){
-      for(var resource of group.resources){
-        this.resources[resource.name] = resource;
-        unresolved[resource.name] = resource.value ? Object.keys(resource.value) : [];
-      }
-    }
-
+  private calculateOrder(unresolved: { [name: string]: string[] }): string[] {
     // build processing order based on dependency graph
+    var order: string[] = [];
     var count = Object.keys(unresolved).length;
     while(Object.keys(unresolved).length > 0){
       var removed = 0;
       for(var key in unresolved){
         if(unresolved[key].length === 0){
           removed++;
-          this.processOrder.unshift(key);
+          order.unshift(key);
           delete unresolved[key];
           for(var updkey in unresolved){
             var depidx = unresolved[updkey].indexOf(key);
@@ -62,15 +44,56 @@ export class GameEngineService {
         throw new Error("could not resolve resource dependency graph");
       }
     }
+    return order;
+  }
+
+  private init(){
+    this.log.debug('Game engine initializing.');
+
+    this.resource = {};
+    this.valueOrder = [];
+    this.reverseValueOrder = [];
+    this.generatorOrder = [];
+    this.resetting = false;
+
+    var values: { [name: string]: string[] } = {};
+    var generators: { [name: string]: string[] } = {};
+    for(var group of this.groups){
+      for(var resource of group.resources){
+        this.resource[resource.name] = new ResourceMeta(resource, this.resource);
+        values[resource.name] = resource.value
+          ? Object.keys(resource.value) : [];
+        generators[resource.name] = resource.generators
+          ? Object.keys(resource.generators) : [];
+      }
+    }
+
+    // build processing order based on dependency graph
+    this.valueOrder = this.calculateOrder(values);
+    this.reverseValueOrder = this.valueOrder.slice().reverse();
+    this.generatorOrder = this.calculateOrder(generators).reverse();
+
+    console.log('generatorOrder', this.generatorOrder);
 
     // give starting inventory
     for(var name in STARTINVENTORY){
-      this.incCrafted(name, STARTINVENTORY[name]);
+      this.resource[name].incCrafted(STARTINVENTORY[name], STARTINVENTORY);
     }
 
     this.log.debug('Game engine initialized.');
     this.log.append("You know HTML and Javascript. Try writing some code!", true);
     this.performTick();
+  }
+
+  private addValuesToTotals(amount: number, values: ResourceMap, totals: ResourceMap){
+    for(let key in values){
+      if(!totals[key]) totals[key] = 0;
+      if(!this.resource[key].restorable){
+        totals[key] += amount * values[key];
+      }
+      if(this.resource[key].value)
+        this.addValuesToTotals(amount * values[key], this.resource[key].value, totals);
+    }
   }
 
   private performTick(): void {
@@ -83,171 +106,124 @@ export class GameEngineService {
     // calculated generated amounts and total modifier effects
     var generated: ResourceMap = {};
     var modified: ResourceMap = {};
-    for(var name of this.processOrder){
-      if(!this.totals[name] || (!this.resources[name].generators && !this.resources[name].modifiers) || this.totals[name] === 0) continue;
-      if(this.resources[name].generators){
-        for(var key in this.resources[name].generators){
+    for(var name of this.generatorOrder){
+      this.resource[name].maxed = false;
+      if((!this.resource[name].generators && !this.resource[name].modifiers) || this.resource[name].total === 0) continue;
+      let apply = this.resource[name].maxGeneratorApply(generated);
+      if(this.resource[name].generators){
+        for(var key in this.resource[name].generators){
           if(!generated[key]) generated[key] = 0;
-          generated[key] += this.totals[name] * this.resources[name].generators[key];
+          generated[key] += apply * this.resource[name].generators[key];
         }
       }
-      if(this.resources[name].modifiers){
-        // only apply if the resource's negative generators are satisfied
-        if(!this.areGeneratorsSatisfied(this.resources[name])) continue;
-        for(var key in this.resources[name].modifiers){
-          if(!modified[key]) modified[key] = 0;
-          modified[key] += this.resources[name].modifiers[key];
+      if(this.resource[name].modifiers){
+        if(apply > 1){
+          for(var key in this.resource[name].modifiers){
+            let amount = generated[key] - (generated[key] * Math.pow(this.resource[name].modifiers[key], apply));
+            if(!modified[key]) modified[key] = 0;
+            modified[key] += amount;
+          }
         }
       }
     }
     // apply modifier effects to generated amounts
     for(var key in modified){
       if(!generated[key]) continue;
-      generated[key] += generated[key] * modified[key];
+      generated[key] -= modified[key];
     }
     // add modified amounts to totals
-    for(var key in generated) this.incCrafted(key, generated[key]);
+    for(var key in generated){
+      if(!this.resource[key].incCrafted(generated[key])){
+        this.resource[key].maxed = true;
+        generated[key] = 0;
+      }
+    }
 
-    this.totals = this.getResourceTotals();
+    // update totals and deltas on resources
+    let totals: ResourceMap = {};
+    for(let name of this.valueOrder){
+      this.resource[name].delta = generated[name] ? generated[name] : 0;
+      if(!totals[name]) totals[name] = 0;
+      totals[name] += this.resource[name].crafted;
+
+      if(totals[name] === 0 || !this.resource[name].value) continue;
+      for(let key in this.resource[name].value){
+        if(!totals[key]) totals[key] = 0;
+        totals[key] += totals[name] * this.resource[name].value[key];
+        if(!this.resource[key].value) continue;
+        this.addValuesToTotals(totals[name], this.resource[key].value, totals);
+      }
+    }
+    for(let key in totals){
+      this.resource[key].total = totals[key];
+    }
 
     // handle negative totals
-    for(var name in this.totals){
-      if(this.totals[name] >= 0) continue;
+    for(var name in this.resource){
+      if(this.resource[name].total >= 0) continue;
 
       // reduce all attritionable resources that depend on this one
       var deps: ResourceMap = {};
       var totalDeps = 0;
-      for(var key in this.resources){
+      for(var key of this.valueOrder){
         if(name === key) continue;
-        if(!this.resources[key].attritionable) continue;
-        if(this.crafted[key] <= 0) continue;
-        if(!this.resources[key].value) continue;
-        if(!this.resources[key].value[name] || this.resources[key].value[name] > 0) continue;
-        deps[key] = this.resources[key].value[name] * this.totals[key];
+        if(!this.resource[key].attritionable) continue;
+        if(this.resource[key].crafted <= 0) continue;
+        if(!this.resource[key].value) continue;
+        if(!this.resource[key].value[name] || this.resource[key].value[name] > 0) continue;
+        deps[key] = this.resource[key].value[name] * this.resource[key].total;
         totalDeps += deps[key];
       }
       // total reduction will be 1/2 of discrepancy
-      var totalReduction = this.totals[name] * -0.5;
+      var totalReduction = this.resource[name].total * -0.5;
       for(var key in deps){
-        this.crafted[key] -= totalReduction * (deps[key] / totalDeps);
-        if(this.crafted[key] < 0.01) this.crafted[key] = 0;
+        this.resource[key].crafted -= totalReduction * (deps[key] / totalDeps);
+        if(this.resource[key].crafted < 0.01) this.resource[key].crafted = 0;
       }
     }
 
     setTimeout(() => this.performTick(), 100);
   }
 
-  private getResourceTotals(): ResourceMap {
-    var totals: ResourceMap = {};
-    for(var name of this.processOrder){
-      if(!totals[name]) totals[name] = 0;
-      if(this.crafted[name]) totals[name] += this.crafted[name];
-      if(totals[name] === 0 || !this.resources[name].value) continue;
-      for(var key in this.resources[name].value){
-        if(!totals[key]) totals[key] = 0;
-        totals[key] += totals[name] * this.resources[name].value[key];
-      }
-    }
-    return totals;
-  }
-
-  private isResourceVisible(resource: Resource): boolean {
-    if(this.visible[resource.name]) return this.visible[resource.name];
-    if(!resource.display) return false;
-    if(!resource.requirements) return true;
-    var visible = true;
-    for(var key in resource.requirements){
-      if(!this.globals[key]){ visible = false; break; }
-      if(this.globals[key] < resource.requirements[key]){ visible = false; break; }
-    }
-    if(visible){
-      this.visible[resource.name] = true;
-      if(resource.appearText) this.log.append(resource.appearText, true);
-    }
-    return visible;
-  }
-
-  private incCrafted(name: string, amount: number = 1): void {
-    // bail if it can't be afforded
-    if(this.resources[name].value){
-      for(var key in this.resources[name].value){
-        if(this.resources[name].value[key] < 0){
-          var maxAmount = this.totals[key]
-            ? this.totals[key] / this.resources[name].value[key] * -1
-            : 0;
-          if(maxAmount < amount) return;
-        }
-      }
-    }
-
-    if(!this.crafted[name]) this.crafted[name] = 0;
-    if(!this.globals[name]) this.globals[name] = 0;
-    this.crafted[name] += amount;
-    if(this.crafted[name] < 0) this.crafted[name] = 0;
-    if(amount > 0) this.globals[name] += amount;
-  }
-
-  craftResource(resource: Resource, amount: number = 1): void {
-    if(!this.isResourceCraftable(resource, amount)) return;
-    this.incCrafted(resource.name, amount);
+  craftResource(resource: ResourceMeta, amount: number = 1): void {
+    if(!resource.isCraftable(amount)) return;
+    resource.incCrafted(amount);
     this.log.append(`Added ${ amount } ${ resource.display }.`);
   }
 
-  destroyResource(resource: Resource, amount: number = 1, quiet?: boolean): void {
-    if(!this.crafted[resource.name]) return;
-    this.incCrafted(resource.name, amount * -1);
+  destroyResource(resource: ResourceMeta, amount: number = 1, quiet?: boolean): void {
+    resource.incCrafted(amount * -1);
     if(!resource.value) return;
     for(var key in resource.value){
-      if(this.resources[key].restorable) continue;
-      this.destroyResource(this.resources[key], resource.value[key] * amount * -1, true);
+      if(this.resource[key].restorable) continue;
+      this.destroyResource(this.resource[key], resource.value[key] * amount * -1, true);
     }
     if(!quiet) this.log.append(`Removed ${ amount } ${ resource.display }.`);
   }
 
-  getResourceCount(resource: Resource): number {
-    if(!this.totals[resource.name]) return 0;
-    return this.totals[resource.name];
-  }
-
-  areGeneratorsSatisfied(resource: Resource): boolean {
-    if(!resource.generators) return true;
-    var satisfied = true;
-    for(var key in resource.generators){
-      if(resource.generators[key] > 0) continue;
-      if(!this.totals[key] || this.totals[key] <= 0){
-        satisfied = false;
-        break;
-      }
+  private resourceVisible(resource: Resource): boolean {
+    let rv = this.resource[resource.name].isVisible();
+    if(rv.visible && rv.first && resource.appearText){
+      this.log.append(resource.appearText, true);
     }
-    return satisfied;
+    return rv.visible;
   }
 
-  isResourceCraftable(resource: Resource, amount: number = 1): boolean {
-    if(!resource.craftText) return false;
-    var craftable = true;
-    for(var key in resource.value){
-      if(resource.value[key] > 0) continue;
-      if(!this.totals[key]){ craftable = false; break; }
-      if(this.totals[key] < resource.value[key] * amount * -1){ craftable = false; break; }
-    }
-    return craftable;
-  }
-
-  getVisibleResources(group: ResourceGroup): Resource[] {
-    var visible: Resource[] = [];
-    for(var resource of group.resources){
-      if(this.isResourceVisible(resource)) visible.push(resource);
+  getVisibleResources(group: ResourceGroup): ResourceMeta[] {
+    let visible: ResourceMeta[] = [];
+    for(let resource of group.resources){
+      if(this.resourceVisible(resource))
+        visible.push(this.resource[resource.name]);
     }
     return visible;
   }
 
   getVisibleGroups(): ResourceGroup[] {
     var visible: ResourceGroup[] = [];
-    var totals = this.getResourceTotals();
     for(var group of this.groups) {
       var isVisible = false;
       for(var resource of group.resources){
-        if(this.isResourceVisible(resource)){
+        if(this.resourceVisible(resource)){
           isVisible = true;
           break;
         }

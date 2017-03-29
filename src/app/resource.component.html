@@ -1,22 +1,41 @@
 <div class='resource' flash-new [skipFlash]="skipFlash">
-  <h3 class='name'>{{resource.display}}</h3>
-  <span class='amount'>{{resource.prefix}}{{engine.getResourceCount(resource) | amount:resource.pluralText}}</span> <label class='unit'>{{engine.getResourceCount(resource) | amount:resource.pluralText:true}}</label>
+  <div class='delta' *ngIf="resource.delta !== 0" [class.neg]="resource.delta < 0">
+    {{abs(resource.delta) | amount:null}}
+  </div>
+  <div class='delta max' *ngIf="resource.maxed">MAX</div>
+  <h3 class='name' (click)="toggleMore()">{{resource.display}}</h3>
+  <span class='amount'>
+    {{resource.prefix}}{{resource.total | amount:resource.pluralText}}
+  </span>
+  <label class='unit'>
+    {{resource.total | amount:resource.pluralText:true}}
+  </label>
   <div class='expanded' *ngIf="expanded">
     <div class='desc' *ngIf="resource.descText">{{resource.descText}}</div>
     <div class='cost' *ngIf="hasCost()">
       <h4>Resource Cost:</h4>
-      <ul>
-        <li *ngFor="let cost of getCosts()">
-          <label class='costname'>{{cost.name}}:</label>
-          <span class='costamount'>{{cost.amount}}</span>
-        </li>
-      </ul>
+      <div class='costcontainer'>
+        <ul class='label'>
+          <li *ngFor="let cost of getCosts()">
+            <label class='costname'>{{cost.name}}:</label>
+          </li>
+        </ul>
+        <ul>
+          <li *ngFor="let cost of getCosts()">
+            <span class='costamount' [class.met]="costMet(cost.key, cost.amount)">{{cost.amount}}</span>
+          </li>
+        </ul>
+      </div>
     </div>
   </div>
   <div class='controls'>
     <span class='toggle' *ngIf="!expanded" (click)="toggleMore()">+ More</span>
     <span class='toggle' *ngIf="expanded" (click)="toggleMore()">- Less</span>
-    <button *ngIf="resource.craftText" [disabled]="!engine.isResourceCraftable(resource)" (click)="engine.craftResource(resource)">{{resource.craftText}}</button>
-    <button *ngIf="resource.destroyText" [disabled]="engine.getResourceCount(resource) <= 0" (click)="engine.destroyResource(resource)">{{resource.destroyText}}</button>
+    <button *ngIf="resource.craftText"
+      [disabled]="!resource.isCraftable()"
+      (click)="engine.craftResource(resource)">{{resource.craftText}}</button>
+    <button *ngIf="resource.destroyText"
+      [disabled]="resource.total <= 0"
+      (click)="engine.destroyResource(resource)">{{resource.destroyText}}</button>
   </div>
 </div>
