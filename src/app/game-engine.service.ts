@@ -68,6 +68,15 @@ export class GameEngineService {
       }
     }
 
+    for(let key in this.resource){
+      for(let map of [this.resource[key].value, this.resource[key].generators, this.resource[key].resource.requirements, this.resource[key].modifiers])
+      {
+        for(let skey in map){
+          if(!this.resource[skey]) throw new Error(`Resource ${ skey } referenced by ${ key } not found.`);
+        }
+      }
+    }
+
     // build processing order based on dependency graph
     this.valueOrder = this.calculateOrder(values);
     this.reverseValueOrder = this.valueOrder.slice().reverse();
@@ -81,7 +90,8 @@ export class GameEngineService {
     }
 
     this.log.debug('Game engine initialized.');
-    this.log.append("You know HTML and Javascript. Try writing some code!", true);
+    this.log.append("You've signed up for the free tier of a cloud hosting service.", true);
+    this.log.append("You know HTML, CSS, and Javascript. Try writing some code!", true);
     this.performTick();
   }
 
