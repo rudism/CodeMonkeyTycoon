@@ -114,8 +114,6 @@ export class GameEngineService {
         for(var key in this.resource[name].generators){
           if(!generated[key]) generated[key] = 0;
           generated[key] += apply * this.resource[name].generators[key];
-          if(!this.resource[key].value) continue;
-          this.addValuesToTotal(generated[key], this.resource[key].value, valueGen, true);
         }
       }
       if(this.resource[name].modifiers){
@@ -135,7 +133,10 @@ export class GameEngineService {
     }
     // add modified amounts to totals
     for(var key in generated){
-      if(!this.resource[key].incCrafted(generated[key])){
+      if(this.resource[key].incCrafted(generated[key])){
+        if(!this.resource[key].value) continue;
+        this.addValuesToTotal(generated[key], this.resource[key].value, valueGen, true);
+      } else {
         this.resource[key].maxed = true;
         generated[key] = 0;
       }
