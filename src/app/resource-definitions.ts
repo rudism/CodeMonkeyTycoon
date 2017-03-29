@@ -117,12 +117,28 @@ var products: ResourceGroup = { name: 'Products', resources: [
   {
     name: 'ad-website',
     display: 'Ad Websites',
-    pluralText: ['ads',null,'M ads','B ads'],
+    pluralText: ['sites',null,'M sites','B sites'],
     craftText: 'Deploy',
     destroyText: 'Takedown',
     descText: "Slows down user acquisition, but some will earn money.",
     value: {
       'website': -1,
+      'html': -5,
+      'javascript': -5,
+      'user-capacity': 10
+    },
+    generators: { 'ad-users': 0.005 },
+    modifiers: { 'users': 0.5 }
+  },
+  {
+    name: 'power',
+    display: 'Power',
+    pluralText: ['sites',null,'M sites','B sites'],
+    craftText: 'Deploy',
+    destroyText: 'Takedown',
+    descText: "Slows down user acquisition, but some will earn money.",
+    value: {
+      'ad-website': -2,
       'html': -5,
       'javascript': -5,
       'user-capacity': 10

@@ -85,14 +85,13 @@ export class GameEngineService {
     this.performTick();
   }
 
-  private addValuesToTotals(amount: number, values: ResourceMap, totals: ResourceMap){
+  private addValuesToTotal(amount: number, values: ResourceMap, totals: ResourceMap, first: boolean){
     for(let key in values){
       if(!totals[key]) totals[key] = 0;
-      if(!this.resource[key].restorable){
+      if(first || !this.resource[key].restorable)
         totals[key] += amount * values[key];
-      }
-      if(this.resource[key].value)
-        this.addValuesToTotals(amount * values[key], this.resource[key].value, totals);
+      if(!this.resource[key].value) continue;
+      this.addValuesToTotal(amount * values[key] * -1, this.resource[key].value, totals, false);
     }
   }
 
@@ -147,12 +146,7 @@ export class GameEngineService {
       totals[name] += this.resource[name].crafted;
 
       if(totals[name] === 0 || !this.resource[name].value) continue;
-      for(let key in this.resource[name].value){
-        if(!totals[key]) totals[key] = 0;
-        totals[key] += totals[name] * this.resource[name].value[key];
-        if(!this.resource[key].value) continue;
-        this.addValuesToTotals(totals[name], this.resource[key].value, totals);
-      }
+      this.addValuesToTotal(totals[name], this.resource[name].value, totals, true);
     }
     for(let key in totals){
       this.resource[key].total = totals[key];
