@@ -6,7 +6,7 @@ export class AmountPipe implements PipeTransform {
     if(!suffixes) return new Number(value).toFixed(decimals);
     if(value <= 0) return showSuffix
       ? suffixes[0]
-      : new Number(value).toFixed(decimals);
+      : new Number(0).toFixed(decimals);
 
     var suffix = suffixes[0];
     var denom = 1;

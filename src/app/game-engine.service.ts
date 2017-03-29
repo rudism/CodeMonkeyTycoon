@@ -104,6 +104,7 @@ export class GameEngineService {
 
     // calculated generated amounts and total modifier effects
     var generated: ResourceMap = {};
+    var valueGen: ResourceMap = {};
     var modified: ResourceMap = {};
     for(var name of this.generatorOrder){
       this.resource[name].maxed = false;
@@ -113,6 +114,8 @@ export class GameEngineService {
         for(var key in this.resource[name].generators){
           if(!generated[key]) generated[key] = 0;
           generated[key] += apply * this.resource[name].generators[key];
+          if(!this.resource[key].value) continue;
+          this.addValuesToTotal(generated[key], this.resource[key].value, valueGen, true);
         }
       }
       if(this.resource[name].modifiers){
@@ -141,7 +144,7 @@ export class GameEngineService {
     // update totals and deltas on resources
     let totals: ResourceMap = {};
     for(let name of this.valueOrder){
-      this.resource[name].delta = generated[name] ? generated[name] : 0;
+      this.resource[name].delta = (generated[name] ? generated[name] : 0) + (valueGen[name] ? valueGen[name] : 0);
       if(!totals[name]) totals[name] = 0;
       totals[name] += this.resource[name].crafted;
 
