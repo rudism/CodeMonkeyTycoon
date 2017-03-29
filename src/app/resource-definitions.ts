@@ -127,7 +127,7 @@ var products: ResourceGroup = { name: 'Products', resources: [
       'javascript': -5,
       'user-capacity': 10
     },
-    generators: { 'ad-users': 0.005 },
+    generators: { 'users': '-0.005', 'ad-users': 0.005 },
     modifiers: { 'users': 0.5 }
   },
   {

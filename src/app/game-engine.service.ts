@@ -119,7 +119,7 @@ export class GameEngineService {
       if(this.resource[name].modifiers){
         if(apply > 1){
           for(var key in this.resource[name].modifiers){
-            let amount = generated[key] - (generated[key] * Math.pow(this.resource[name].modifiers[key], apply));
+            let amount = Math.abs(generated[key] - (generated[key] * Math.pow(this.resource[name].modifiers[key], apply)));
             if(!modified[key]) modified[key] = 0;
             modified[key] += amount;
           }
